@@ -1,15 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://dbanm2wm6wlw2"]
 
-[sub_resource type="Environment" id="Environment_eglwe"]
-background_mode = 3
-glow_enabled = true
-glow_normalized = true
-glow_intensity = 0.52
-glow_strength = 1.61
-glow_bloom = 0.25
-glow_blend_mode = 1
+[ext_resource type="Script" path="res://addons/sgg_graph_plotter/sgg_graph_plotter.gd" id="1_3kwq8"]
 
 [node name="Node2D" type="Node2D"]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_eglwe")
+[node name="SGGGraphPlotter" type="Panel" parent="."]
+offset_right = 826.0
+offset_bottom = 540.0
+script = ExtResource("1_3kwq8")
+line_resolution = 100.0

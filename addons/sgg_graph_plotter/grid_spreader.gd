@@ -1,5 +1,5 @@
 @tool
-extends Control
+extends Node2D
 
 var _data := {}
 var _size := Vector2.ZERO

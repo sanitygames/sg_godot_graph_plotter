@@ -17,8 +17,7 @@ offset_right = 640.0
 offset_bottom = 480.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_wg4y3")
 script = ExtResource("1_x5nyy")
-graph_resolution = 100.0
-VALUE_SCALE = Vector2(3.142, 1)
+line_resolution = 100.0
 
 [node name="GridSpreader" type="Control" parent="."]
 anchors_preset = 0
