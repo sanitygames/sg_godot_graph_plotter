@@ -1,9 +1,9 @@
 @tool
 extends Panel
-class_name SGGraphViewer
+class_name SGGGraphPlotter
 
-@export_range(-10000, 10000) var GRAPH_SCALE: int = 0 : set = set_graph_scale
-@export_range(1, 10000) var GRAPH_RESOLUTION := 100: set = set_graph_resolution
+@export_range(-10000, 10000) var graph_scale: int = 0 : set = set_graph_scale
+@export_range(1, 10000) var graph_resolution := 100: set = set_graph_resolution
 @export var CENTER_NORMAL = Vector2(0.5, 0.5): set = set_center_normal
 @export_range(10, 100) var MINIMUM_GRID_SIZE := 20: set = set_minimum_pixel_grid_size
 @export_range(2, 10, 1) var GRID_DIVISIONS := 5: set = set_grid_divisions
@@ -12,8 +12,7 @@ class_name SGGraphViewer
 var data = func(x): return cos(x)
 var _graph_scale: float = 1.0
 
-func _ready():
-	plot()
+
 
 func _on_tree_entered():
 	pass
@@ -23,13 +22,13 @@ func _on_item_rect_changed():
 		plot()
 
 func set_graph_scale(value: int) -> void:
-	GRAPH_SCALE = value
-	_graph_scale = pow(2.0, GRAPH_SCALE / 1000.0)
+	graph_scale = value
+	_graph_scale = pow(2.0, graph_scale / 1000.0)
 	if Engine.is_editor_hint() && get_child_count() != 0:
 		plot()
 
 func set_graph_resolution(value: int) -> void:
-	GRAPH_RESOLUTION = value
+	graph_resolution = value
 	if Engine.is_editor_hint() && get_child_count() != 0:
 		plot()
 
@@ -57,7 +56,7 @@ func set_value_scale(value: Vector2) -> void:
 func calc_grid_data() -> Dictionary:
 	var p_origin_pos: Vector2 = size * CENTER_NORMAL
 	var __magnitude: float = -floor(log(_graph_scale) / log(GRID_DIVISIONS))
-	var p_grid_interval_length: float = MINIMUM_GRID_SIZE * _graph_scale * pow(GRID_DIVISIONS, __magnitude)
+	var p_grid_interval_length: float = MINIMUM_GRID_SIZE * _graph_scale * pow(GRID_DIVISIONS, __magnitude) + 0.00001
 	var p_start_pos: Vector2 = p_origin_pos.posmod(p_grid_interval_length)
 	var g_origin_pos: Vector2 = ceil(p_origin_pos /p_grid_interval_length)
 	var __check_rect := Rect2(Vector2.ZERO, self.size)
@@ -121,8 +120,6 @@ func plot() -> void:
 		var number_of_grid = self.size / MINIMUM_GRID_SIZE
 		var __v_size: Vector2 = number_of_grid * (VALUE_SCALE/ GRID_DIVISIONS)
 		var __v_position: Vector2 = -(__v_size) * n_origin
-		prints(_graph_scale, __v_position, __v_size, number_of_grid)
 		var value_rect := Rect2(__v_position / _graph_scale * self.scale,  __v_size / _graph_scale * self.scale) 
-		print(value_rect)
-		$GraphPlotter.draw(data, GRAPH_RESOLUTION, self.get_rect(), value_rect)
+		$GraphPlotter.draw(data, graph_resolution, self.get_rect(), value_rect)
 		
