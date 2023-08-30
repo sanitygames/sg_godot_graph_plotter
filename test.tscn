@@ -1,8 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbanm2wm6wlw2"]
-
-[ext_resource type="AudioStream" uid="uid://btwf0nqq4c0uy" path="res://Full Demo 1 Deep.mp3" id="3_6n1e3"]
-[ext_resource type="PackedScene" uid="uid://n4c0vqrblvl" path="res://addons/sgg_graph_plotter/sgg_graph_plotter.tscn" id="3_557gm"]
-[ext_resource type="Script" path="res://addons/sgg_graph_plotter_extend.gd" id="4_cwupt"]
+[gd_scene load_steps=2 format=3 uid="uid://dbanm2wm6wlw2"]
 
 [sub_resource type="Environment" id="Environment_eglwe"]
 background_mode = 3
@@ -14,26 +10,6 @@ glow_bloom = 0.25
 glow_blend_mode = 1
 
 [node name="Node2D" type="Node2D"]
-
-[node name="SGGGraphPlotter" parent="." instance=ExtResource("3_557gm")]
-clip_contents = true
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 1.0
-offset_right = 1883.0
-offset_bottom = 664.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("4_cwupt")
-graph_scale = 40
-graph_resolution = 510
-CENTER_NORMAL = Vector2(0.03, -0.08)
-VALUE_SCALE = Vector2(112.382, 38.93)
-
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("3_6n1e3")
-autoplay = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_eglwe")
