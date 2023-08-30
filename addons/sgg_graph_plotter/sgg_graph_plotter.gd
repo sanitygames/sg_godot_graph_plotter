@@ -3,13 +3,13 @@ extends Panel
 class_name SGGGraphPlotter
 
 @export_range(-10000, 10000) var graph_scale: int = 0 : set = set_graph_scale
-@export_range(1, 10000) var graph_resolution := 100: set = set_graph_resolution
+@export_range(1, 10000) var graph_resolution := 100: set = set_graph_resolution, get = get_graph_resolution
 @export var CENTER_NORMAL = Vector2(0.5, 0.5): set = set_center_normal
 @export_range(10, 100) var MINIMUM_GRID_SIZE := 20: set = set_minimum_pixel_grid_size
 @export_range(2, 10, 1) var GRID_DIVISIONS := 5: set = set_grid_divisions
 @export var VALUE_SCALE := Vector2(1.0, 1.0) : set = set_value_scale
 
-var data = func(x): return cos(x)
+var fn2draw = func(x): return cos(x)
 var _graph_scale: float = 1.0
 
 
@@ -31,6 +31,9 @@ func set_graph_resolution(value: int) -> void:
 	graph_resolution = value
 	if Engine.is_editor_hint() && get_child_count() != 0:
 		plot()
+
+func get_graph_resolution() -> float:
+	return graph_resolution
 
 func set_center_normal(value: Vector2) -> void:
 	CENTER_NORMAL = value
@@ -121,5 +124,5 @@ func plot() -> void:
 		var __v_size: Vector2 = number_of_grid * (VALUE_SCALE/ GRID_DIVISIONS)
 		var __v_position: Vector2 = -(__v_size) * n_origin
 		var value_rect := Rect2(__v_position / _graph_scale * self.scale,  __v_size / _graph_scale * self.scale) 
-		$GraphPlotter.draw(data, graph_resolution, self.get_rect(), value_rect)
+		$GraphPlotter.draw(fn2draw, graph_resolution, self.get_rect(), value_rect)
 		
