@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://dy5gawyltl2u2"]
+
+[ext_resource type="Script" path="res://addons/sgg_graph_plotter/sgg_graph_plotter.gd" id="1_2s04n"]
+[ext_resource type="Script" path="res://addons/sgg_graph_plotter/grid.gd" id="2_7l8nj"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_vertical_guides_ = []
+
+[node name="SGGGraphPlotter" type="Panel" parent="."]
+clip_contents = true
+layout_mode = 0
+offset_right = 601.0
+offset_bottom = 394.0
+script = ExtResource("1_2s04n")
+zoom = 1.23
+value_par_grid = Vector2(1152, 648)
+value_par_rect_size = Vector2(1152, 648)
+
+[node name="Grid" type="Node2D" parent="SGGGraphPlotter"]
+script = ExtResource("2_7l8nj")
