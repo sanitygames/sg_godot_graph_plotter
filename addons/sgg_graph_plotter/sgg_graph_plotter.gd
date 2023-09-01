@@ -2,18 +2,33 @@
 extends Panel
 class_name SGGGraphPlotter
 
+@export_group("Environment")
 @export_range(-10000, 10000) var graph_scale: int = 0 : set = set_graph_scale, get = get_graph_scale
 @export_range(1, 1000) var line_resolution := 100: set = set_graph_resolution, get = get_graph_resolution
 @export var center_normal = Vector2(0.5, 0.5): set = set_center_normal, get = get_center_normal
 @export var value_par_grid := Vector2(1.0, 1.0) : set = set_value_par_grid, get = get_value_par_grid
 @export_range(10, 100) var minimum_grid_size := 20: set = set_minimum_pixel_grid_size
 @export_range(2, 10, 1) var grid_divisions := 5: set = set_grid_divisions
-@export var graph_visible := true
-@export var grid_visible := true
-@export var scale_visible := true
+@export_group("Grid")
+@export var grid_visible := true : set = set_grid_visible, get = get_grid_visible
+@export_group("Line")
+@export var graph_visible := true : set = set_graph_visible, get = get_graph_visible
+@export var graph_line_width := 1.0 : set = set_graph_line_width, get = get_graph_line_width
+@export var width_curve: Curve2D
+@export var line_default_color := Color.WHITE : set = set_line_default_color, get = get_line_default_color
+@export_subgroup("LineFill")
+@export var gradient: Gradient : set = set_line_gradient, get = get_line_gradient
+@export var joint_mode := Line2D.LINE_CAP_NONE
+@export_group("Scale")
+@export var scale_visible := true 
+@export var font_color := Color.WHITE
+@export var font_outline := Color.BLACK
+@export var font := Font
+
+
 
 var func2plot = func(x): return cos(x) : set = set_func2plot, get = get_func2plot
-var points2plot = [] : set = set_points2plot, get = get_points2plot
+var points2plot: Array[Vector2] = [] : set = set_points2plot, get = get_points2plot
 var _graph_scale: float = 1.0
 
 var _grid_data
@@ -47,6 +62,9 @@ func _enter_tree():
 			__n.set_script(load(dict[key][0]))
 			add_child(__n)
 
+	$GraphPlotter.width = graph_line_width
+	$GraphPlotter.default_color = line_default_color
+	$GraphPlotter.gradient = gradient
 	plot()
 
 
@@ -55,8 +73,7 @@ func _exit_tree():
 
 func _on_item_rect_changed():
 	print("on_item_rect_changed")
-	if Engine.is_editor_hint():
-			plot()
+	_plot_at_edit()
 
 #  [~~~~~~~~~~~~~~~~\
 #  |  Methods		|
@@ -64,7 +81,6 @@ func _on_item_rect_changed():
 #      V
 
 func plot() -> void:
-	print("plot")
 	if grid_visible || scale_visible:
 		_grid_data = _calc_grid_data()
 	
@@ -77,10 +93,13 @@ func plot() -> void:
 		var __v_size: Vector2 = number_of_grid * (value_par_grid/ grid_divisions)
 		var __v_position: Vector2 = -(__v_size) * n_origin
 		var value_rect := Rect2(__v_position / _graph_scale * self.scale,  __v_size / _graph_scale * self.scale) 
-		$GraphPlotter.draw(func2plot, line_resolution, self.get_rect(), value_rect)
+		if points2plot.is_empty():
+			$GraphPlotter.draw(func2plot, line_resolution, self.get_rect(), value_rect)
+		else:
+			$GraphPlotter.draw(points2plot, line_resolution, self.get_rect(), value_rect)
 
 	if scale_visible:
-		$ScaleEmitter.draw(_grid_data, self.size)
+		$ScaleEmitter.draw(_grid_data, value_par_grid * pow(grid_divisions,-floor(log(_graph_scale) / log(grid_divisions))))
 
 
 #  [~~~~~~~~~~~~~~\
@@ -135,6 +154,10 @@ func _calc_grid_data() -> Dictionary:
 			},
 	}
 
+func _plot_at_edit() -> void:
+	if Engine.is_editor_hint() && get_child_count() != 0:
+		plot()
+
 #  [~~~~~~~~~~~~~~~~~~~\
 #  |  Setter & Getter  |
 #  |___  ______________|
@@ -143,8 +166,7 @@ func _calc_grid_data() -> Dictionary:
 func set_graph_scale(value: int) -> void:
 	graph_scale = value
 	_graph_scale = pow(2.0, graph_scale / 1000.0)
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+	_plot_at_edit()
 	
 func get_graph_scale() -> int:
 	return graph_scale
@@ -159,29 +181,26 @@ func get_graph_resolution() -> float:
 
 func set_center_normal(value: Vector2) -> void:
 	center_normal = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+	_plot_at_edit()
 
 func get_center_normal() -> Vector2:
 	return center_normal
 
 func set_value_par_grid(value: Vector2) -> void:
 	value_par_grid = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+	_plot_at_edit()
+	
 
 func get_value_par_grid() -> Vector2:
 	return value_par_grid
 
 func set_minimum_pixel_grid_size(value: int) -> void:
 	minimum_grid_size = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+	_plot_at_edit()
 
 func set_grid_divisions(value: int) -> void:
 	grid_divisions = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+	_plot_at_edit()
 
 func set_func2plot(value: Callable) -> void:
 	func2plot = value
@@ -194,3 +213,44 @@ func set_points2plot(value: Array[Vector2]) -> void:
 
 func get_points2plot() -> Array[Vector2]:
 	return points2plot
+
+func set_grid_visible(value) -> void:
+	grid_visible = value
+	_plot_at_edit()
+
+func get_grid_visible() -> bool:
+	return grid_visible
+
+func set_graph_visible(value) -> void:
+	graph_visible = value
+	_plot_at_edit()
+
+func get_graph_visible() -> bool:
+	return graph_visible
+
+func set_graph_line_width(value: float) -> void:
+	graph_line_width = value
+	if has_node("GraphPlotter"):
+		$GraphPlotter.width = graph_line_width
+	_plot_at_edit()
+
+func get_graph_line_width() -> float:
+	return graph_line_width
+
+func set_line_default_color(value: Color) -> void:
+	line_default_color = value
+	if has_node("GraphPlotter"):
+		$GraphPlotter.default_color = line_default_color
+	_plot_at_edit()
+
+func get_line_default_color() -> Color:
+	return line_default_color
+
+func set_line_gradient(value: Gradient) -> void:
+	gradient = value
+	if has_node("GraphPlotter"):
+		$GraphPlotter.gradient = gradient
+	_plot_at_edit()
+
+func get_line_gradient() -> Gradient:
+	return gradient

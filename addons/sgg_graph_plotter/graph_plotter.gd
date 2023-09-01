@@ -2,11 +2,7 @@
 extends Line2D
 
 
-# func draw(graph_data, graph_line_resolution, self.get_rect(), value_rect)
 func draw(data, resolution: int, p_rect: Rect2, v_rect: Rect2) -> void:
-	# for debug
-	width = 2.0
-	default_color = Color.WHITE
 
 	var _points = []
 	if data is Callable:
@@ -22,8 +18,9 @@ func draw(data, resolution: int, p_rect: Rect2, v_rect: Rect2) -> void:
 
 		self.points = _points
 
-	elif data is PackedVector2Array:
-		for p in data:
+	elif data is Array[Vector2]:
+		var _data = PackedVector2Array(data)
+		for p in _data:
 			var nx: float = inverse_lerp(v_rect.position.x, v_rect.end.x, p.x)
 			var ny: float = inverse_lerp(v_rect.position.y, v_rect.end.y, p.y)
 			var px: float = lerp(0.0,  p_rect.size.x, nx)
