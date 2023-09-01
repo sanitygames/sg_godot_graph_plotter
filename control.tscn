@@ -15,12 +15,10 @@ metadata/_edit_vertical_guides_ = []
 [node name="SGGGraphPlotter" type="Panel" parent="."]
 clip_contents = true
 layout_mode = 0
-offset_right = 601.0
-offset_bottom = 394.0
+offset_right = 456.0
+offset_bottom = 312.0
 script = ExtResource("1_2s04n")
-zoom = 1.23
-value_par_grid = Vector2(1152, 648)
-value_par_rect_size = Vector2(1152, 648)
+zoom = 0.82
 
 [node name="Grid" type="Node2D" parent="SGGGraphPlotter"]
 script = ExtResource("2_7l8nj")

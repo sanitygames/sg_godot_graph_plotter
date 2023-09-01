@@ -3,13 +3,15 @@ extends Panel
 class_name SGGGraphPlotter
 
 @export_group("Coordinate")
-@export_range(0.001, 100.0) var zoom :float = 1.0: set = set_zoom
+@export_range(1, 1000000) var zoom :float = 1.0: set = set_zoom
 @export var normalized_origin := Vector2(0.5, 0.5)
 @export var value_par_grid := Vector2.ONE
 @export var value_par_rect_size := Vector2.ONE
 @export_subgroup("AdvancedSettings")
 @export var minimum_subgrid_size: int = 10
 @export var grid_divisions: int = 5
+
+var zoom_pow = 1.0
 
 func _enter_tree():
 	print("sgggp enter tree")
@@ -32,10 +34,9 @@ func _enter_tree():
 			_node.set_script(load(dict[key][1]))
 			_node.set_owner(get_tree().edited_scene_root)
 
+
+
 	plot()
-
-
-
 
 func _on_item_rect_changed():
 	plot()
@@ -49,13 +50,18 @@ func plot():
 	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, fposmod(log(zoom) /log(grid_divisions), 1.0))
 	var subgrid_count = ceil(size / subgrid_size)  
 	var subgrid_start_position = pixel_origin.posmod(subgrid_size)
-	$Grid.test_plot(subgrid_start_position, subgrid_count, subgrid_size)
+	var subgrid_start_count = ceil(-pixel_origin / subgrid_size)
+	$Grid.test_plot(subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
 
 
 
 func set_zoom(value: float) -> void:
 	zoom = value
-	plot()
+	zoom_pow = log(zoom) / log(grid_divisions)
+
+	if has_node("Grid"):
+		plot()
+
 
 
 
