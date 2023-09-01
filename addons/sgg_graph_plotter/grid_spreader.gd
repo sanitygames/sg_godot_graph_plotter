@@ -1,6 +1,8 @@
 @tool
 extends Node2D
 
+@export var x = 100
+
 var _data := {}
 var _size := Vector2.ZERO
 
@@ -9,6 +11,12 @@ var _color := Color.GRAY
 var _c0 = 0.6
 var _c1 = 0.3
 var _c2 = 1.0
+
+func _ready():
+	print(x)
+
+func _enter_tree():
+	print("grid spreader enter tree")
 
 func draw(data: Dictionary, rect_size: Vector2) -> void:
 	_data = data
