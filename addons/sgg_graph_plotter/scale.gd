@@ -3,7 +3,7 @@ extends Node2D
 
 var labels = []
 
-func test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_rect, scale):
+func plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_rect, scale):
 	var __ = labels.map(func(l): l.queue_free())
 	labels.clear()
 

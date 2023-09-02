@@ -35,9 +35,9 @@ class_name SGGGraphPlotter
 	set = set_grid_divisions,
 	get = get_grid_divisions
 
-var callable_to_plot: Callable: 
-	set = set_function_to_plot,
-	get = get_function_to_plot
+var callable_to_plot: Callable = func(x): return x: 
+	set = set_callable_to_plot,
+	get = get_callable_to_plot
 var array_to_plot := PackedVector2Array():
 	set = set_array_to_plot,
 	get = get_array_to_plot
@@ -91,7 +91,7 @@ func _on_item_rect_changed():
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Methods
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-func set_something_to_plot(value) -> void:
+func set_to_plot(value) -> void:
 	is_callable = value is Callable
 	if is_callable:
 		callable_to_plot = Callable(value)
@@ -122,10 +122,10 @@ func plot() -> void:
 	#----------------------------------------
 	$Grid.plot(get_rect(), subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
 	if is_callable:
-		$Graph.plot(callable_to_plot, graph_resolution, value_rect, get_rect())
+		$Graph.plot_callable(callable_to_plot, graph_resolution, value_rect, get_rect())
 	else:
-		$Graph.plot(array_to_plot, graph_resolution,value_rect, get_rect())
-	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized / grid_divisions)
+		$Graph.plot_array(array_to_plot, graph_resolution,value_rect, get_rect())
+	$Scale.plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized / grid_divisions)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,13 +180,15 @@ func set_grid_divisions(value: int) -> void:
 func get_grid_divisions() -> int:
 	return grid_divisions
 
-func set_function_to_plot(value: Callable) -> void:
+func set_callable_to_plot(value: Callable) -> void:
+	is_callable = true
 	callable_to_plot = value
 
-func get_function_to_plot() -> Callable:
+func get_callable_to_plot() -> Callable:
 	return callable_to_plot
 
 func set_array_to_plot(value: Array) -> void:
+	is_callable = false
 	array_to_plot.clear()
 	for v in value:
 		if v is Vector2:
