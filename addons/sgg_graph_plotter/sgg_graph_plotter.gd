@@ -10,7 +10,7 @@ class_name SGGGraphPlotter
 # │ └────┐ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├──┘ │ Graph
 # ├───── │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├────┘ Plotter
 # ├──────┘ │ └───┘ │ └───┘ │ └───┘ │ │ │      ----------------------------------
-# └────────┴───────┴───────┴───────┴─┴─┘	  Ver.0.1.4
+# └────────┴───────┴───────┴───────┴─┴─┘	  Ver.0.2.0
 # ==============================================================================
 
 
@@ -35,10 +35,17 @@ class_name SGGGraphPlotter
 	set = set_grid_divisions,
 	get = get_grid_divisions
 
-var element2plot = func(x): return sin(x):
-	set = set_element2plot,
-	get = get_element2plot
+var callable_to_plot: Callable: 
+	set = set_function_to_plot,
+	get = get_function_to_plot
+var array_to_plot := PackedVector2Array():
+	set = set_array_to_plot,
+	get = get_array_to_plot
+
+var is_callable := true
 var zoom_pow = 1.0
+
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Actions
@@ -79,10 +86,19 @@ func _on_item_rect_changed():
 	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
 
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Methods
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-func plot():
+func set_something_to_plot(value) -> void:
+	is_callable = value is Callable
+	if is_callable:
+		callable_to_plot = Callable(value)
+	elif value is Array:
+		array_to_plot = value
+
+func plot() -> void:
 	#----------------------------------------
 	# set variables 
 	#----------------------------------------
@@ -105,7 +121,10 @@ func plot():
 	# plot at child nodes
 	#----------------------------------------
 	$Grid.plot(get_rect(), subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
-	$Graph.plot(element2plot, graph_resolution, value_rect, get_rect())
+	if is_callable:
+		$Graph.plot(callable_to_plot, graph_resolution, value_rect, get_rect())
+	else:
+		$Graph.plot(array_to_plot, graph_resolution,value_rect, get_rect())
 	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized / grid_divisions)
 
 
@@ -161,13 +180,22 @@ func set_grid_divisions(value: int) -> void:
 func get_grid_divisions() -> int:
 	return grid_divisions
 
-func set_element2plot(value) -> void:
-	element2plot = value
-	if Engine.is_editor_hint() && _is_child_node_ready():
-		plot()
+func set_function_to_plot(value: Callable) -> void:
+	callable_to_plot = value
 
-func get_element2plot():
-	return element2plot
+func get_function_to_plot() -> Callable:
+	return callable_to_plot
+
+func set_array_to_plot(value: Array) -> void:
+	array_to_plot.clear()
+	for v in value:
+		if v is Vector2:
+			array_to_plot.push_back(v)
+		elif v is Vector2i:
+			array_to_plot.push_back(Vector2(v))
+
+func get_array_to_plot() -> PackedVector2Array:
+	return array_to_plot
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
