@@ -61,14 +61,17 @@ func plot():
 	#	subgrid_start_position -> 最初のグリッドの描画位置
 	#	subgrid_start_count -> 最初のグリッドの原点からの相対位置
 	var pixel_origin = self.size * normalized_origin 
-	var _subgrid_size_magnification = fposmod(log(zoom) / log(grid_divisions), 1.0) 
-	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, _subgrid_size_magnification) 
+	var graph_scale = log(zoom) / log(grid_divisions)
+	var _graph_scale_float_part = fposmod(graph_scale, 1.0)
+	var _graph_scale_integer_part = ceil(graph_scale)
+	# var _subgrid_size_magnification = fposmod(log(zoom) / log(grid_divisions), 1.0) 
+	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, _graph_scale_float_part) 
 	var subgrid_count = ceil(size / subgrid_size) 
 	var subgrid_start_position = pixel_origin.posmod(subgrid_size)
 	var subgrid_start_count = ceil(-pixel_origin / subgrid_size)
 	$Grid.test_plot(subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
 
-	var scale = pow(grid_divisions, ceil((log(zoom) + 0.01) / log(grid_divisions)))
+	var scale = pow(grid_divisions, _graph_scale_integer_part)
 	var subgrid_count_float = size / subgrid_size 
 	var value_rect_size =  (value_par_grid * subgrid_count_float) / scale
 	var value_rect_position = -(value_rect_size * normalized_origin)
@@ -77,7 +80,7 @@ func plot():
 	$Graph.test_plot(func2plot, graph_resolution, value_rect, get_rect())
 
 
-	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid)
+	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, scale)
 
 func set_zoom(value: float) -> void:
 	zoom = value
