@@ -2,124 +2,206 @@
 extends Panel
 class_name SGGGraphPlotter
 
-@export_range(-10000, 10000) var graph_scale: int = 0 : set = set_graph_scale
-@export_range(1, 10000) var graph_resolution := 100: set = set_graph_resolution
-@export var CENTER_NORMAL = Vector2(0.5, 0.5): set = set_center_normal
-@export_range(10, 100) var MINIMUM_GRID_SIZE := 20: set = set_minimum_pixel_grid_size
-@export_range(2, 10, 1) var GRID_DIVISIONS := 5: set = set_grid_divisions
-@export var VALUE_SCALE := Vector2(1.0, 1.0) : set = set_value_scale
 
-var data = func(x): return cos(x)
-var _graph_scale: float = 1.0
+# ==============================================================================
+# ┌────────┬───────┬───────┬───────┬────────┐ Sanity
+# │ ┌──────┤ ┌─────┤ ┌─────┤ ┌─────┤ ┌────┐ │ Games
+# │ │ ─────┤ │ ┌─┬─┤ │ ┌─┬─┤ │ ┌─┬─┤ │ ┌─ │ │ Godot
+# │ └────┐ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├──┘ │ Graph
+# ├───── │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├────┘ Plotter
+# ├──────┘ │ └───┘ │ └───┘ │ └───┘ │ │ │      ----------------------------------
+# └────────┴───────┴───────┴───────┴─┴─┘	  Ver.0.2.0
+# ==============================================================================
+
+
+@export_group("Coordinate")
+@export_range(0.0001, 1000000) var zoom :float = 1.0: 
+	set = set_zoom, 
+	get = get_zoom
+@export var normalized_origin := Vector2(0.5, 0.5): 
+	set = set_normalized_origin, 
+	get = get_normalized_origin
+@export var value_par_grid := Vector2.ONE: 
+	set = set_value_par_grid, 
+	get = get_value_par_grid
+@export_subgroup("AdvancedSettings")
+@export_range(1, 1000) var graph_resolution: int = 100: 
+	set = set_graph_resolution, 
+	get = get_graph_resolution
+@export var minimum_subgrid_size: float = 10.0:
+	set = set_minimum_subgrid_size,
+	get = get_minimum_subgrid_size
+@export var grid_divisions: int = 5:
+	set = set_grid_divisions,
+	get = get_grid_divisions
+
+var callable_to_plot: Callable = func(x): return x: 
+	set = set_callable_to_plot,
+	get = get_callable_to_plot
+var array_to_plot := PackedVector2Array():
+	set = set_array_to_plot,
+	get = get_array_to_plot
+
+var is_callable := true
+var zoom_pow = 1.0
 
 
 
-func _on_tree_entered():
-	pass
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Actions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func _enter_tree():
+	if !item_rect_changed.is_connected(_on_item_rect_changed):
+		item_rect_changed.connect(_on_item_rect_changed)
+	self.clip_contents = true
+
+	var dict = {
+		"Grid": {
+			fn = func(): return Node2D.new(),
+			path = "res://addons/sgg_graph_plotter/grid.gd",
+		},
+		"Graph": {
+			fn = func(): return Line2D.new(),
+			path = "res://addons/sgg_graph_plotter/graph.gd",
+		},
+		"Scale": {
+			fn = func(): return Node2D.new(),
+			path = "res://addons/sgg_graph_plotter/scale.gd",
+		},
+	}
+
+	for key in dict:
+		if !has_node(key):
+			var _node = dict[key].fn.call()
+			add_child(_node)
+			_node.name = key
+			_node.position = Vector2.ZERO
+			_node.set_script(load(dict[key].path))
+			_node.set_owner(get_tree().edited_scene_root)
+			_node.set_meta("_edit_lock_", true)
+
+	# element2plot = func(x): return sin(x)
+	plot()
 
 func _on_item_rect_changed():
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
 
-func set_graph_scale(value: int) -> void:
-	graph_scale = value
-	_graph_scale = pow(2.0, graph_scale / 1000.0)
-	if Engine.is_editor_hint() && get_child_count() != 0:
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Methods
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func set_to_plot(value) -> void:
+	is_callable = value is Callable
+	if is_callable:
+		callable_to_plot = Callable(value)
+	elif value is Array:
+		array_to_plot = value
+
+func plot() -> void:
+	#----------------------------------------
+	# set variables 
+	#----------------------------------------
+	var _graph_scale: float = log(zoom) / log(grid_divisions)
+	var _graph_scale_float_part: float = fposmod(_graph_scale, 1.0)
+	var _graph_scale_integer_part: int = ceil(_graph_scale)
+	var graph_scale_logalized: float = pow(grid_divisions, _graph_scale_integer_part)
+	var pixel_origin: Vector2 = self.size * normalized_origin 
+	var subgrid_size: float = minimum_subgrid_size * lerp(1, grid_divisions, _graph_scale_float_part) 
+	var subgrid_count: Vector2 = ceil(size / subgrid_size) 
+	var subgrid_start_position: Vector2 = pixel_origin.posmod(subgrid_size)
+	var subgrid_start_count: Vector2 = ceil(-pixel_origin / subgrid_size)
+
+	var subgrid_count_float: Vector2 = size / subgrid_size 
+	var value_rect_size: Vector2 =  (value_par_grid * subgrid_count_float) / graph_scale_logalized
+	var value_rect_position: Vector2 = -(value_rect_size * normalized_origin)
+	var value_rect:Rect2 = Rect2(value_rect_position, value_rect_size)
+
+	#----------------------------------------
+	# plot at child nodes
+	#----------------------------------------
+	$Grid.plot(get_rect(), subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
+	if is_callable:
+		$Graph.plot_callable(callable_to_plot, graph_resolution, value_rect, get_rect())
+	else:
+		$Graph.plot_array(array_to_plot, graph_resolution,value_rect, get_rect())
+	$Scale.plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized / grid_divisions)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Setter & Getter
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func set_zoom(value: float) -> void:
+	zoom = value
+	zoom_pow = log(zoom) / log(grid_divisions)
+	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
+
+func get_zoom() -> float:
+	return zoom
+
+func set_normalized_origin(value: Vector2) -> void:
+	normalized_origin = value
+	if Engine.is_editor_hint() && _is_child_node_ready():
+		plot()
+
+func get_normalized_origin() -> Vector2:
+	return normalized_origin
+
+func set_value_par_grid(value: Vector2) -> void:
+	value_par_grid = value
+	if Engine.is_editor_hint() && _is_child_node_ready():
+		plot()
+
+func get_value_par_grid() -> Vector2:
+	return value_par_grid
 
 func set_graph_resolution(value: int) -> void:
 	graph_resolution = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
+	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
 
-func set_center_normal(value: Vector2) -> void:
-	CENTER_NORMAL = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
+func get_graph_resolution() -> int:
+	return graph_resolution
+
+func set_minimum_subgrid_size(value: float) -> void:
+	minimum_subgrid_size = value
+	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
 
-func set_minimum_pixel_grid_size(value: int) -> void:
-	MINIMUM_GRID_SIZE = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+func get_minimum_subgrid_size() -> float:
+	return minimum_subgrid_size
 
 func set_grid_divisions(value: int) -> void:
-	GRID_DIVISIONS = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
+	grid_divisions = value
+	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
 
-func set_value_scale(value: Vector2) -> void:
-	VALUE_SCALE = value
-	if Engine.is_editor_hint() && get_child_count() != 0:
-		plot()
+func get_grid_divisions() -> int:
+	return grid_divisions
+
+func set_callable_to_plot(value: Callable) -> void:
+	is_callable = true
+	callable_to_plot = value
+
+func get_callable_to_plot() -> Callable:
+	return callable_to_plot
+
+func set_array_to_plot(value: Array) -> void:
+	is_callable = false
+	array_to_plot.clear()
+	for v in value:
+		if v is Vector2:
+			array_to_plot.push_back(v)
+		elif v is Vector2i:
+			array_to_plot.push_back(Vector2(v))
+
+func get_array_to_plot() -> PackedVector2Array:
+	return array_to_plot
 
 
-func calc_grid_data() -> Dictionary:
-	var p_origin_pos: Vector2 = size * CENTER_NORMAL
-	var __magnitude: float = -floor(log(_graph_scale) / log(GRID_DIVISIONS))
-	var p_grid_interval_length: float = MINIMUM_GRID_SIZE * _graph_scale * pow(GRID_DIVISIONS, __magnitude) + 0.00001
-	var p_start_pos: Vector2 = p_origin_pos.posmod(p_grid_interval_length)
-	var g_origin_pos: Vector2 = ceil(p_origin_pos /p_grid_interval_length)
-	var __check_rect := Rect2(Vector2.ZERO, self.size)
-
-	var p_grid_pos_x = p_start_pos.x
-	var pos_xs = []
-	var flag_xs = []
-	var g_digits_xs = [] 
-	var n := int(-g_origin_pos.x + 1) 
-	while p_grid_pos_x >= 0 && p_grid_pos_x <= self.size.x:
-		pos_xs.push_back(Vector2(p_grid_pos_x, p_origin_pos.y))
-		flag_xs.push_back(n % GRID_DIVISIONS == 0)
-		g_digits_xs.push_back(n / GRID_DIVISIONS)
-		n += 1
-		p_grid_pos_x += p_grid_interval_length
-	
-	var p_grid_pos_y = p_start_pos.y
-	var pos_ys = []
-	var flag_ys = []
-	var g_digits_ys = []
-	var m := int(-g_origin_pos.y + 1)
-	while p_grid_pos_y >= 0 && p_grid_pos_y <= self.size.y:
-		pos_ys.push_back(Vector2(p_origin_pos.x, p_grid_pos_y))
-		flag_ys.push_back(m % GRID_DIVISIONS == 0)
-		g_digits_ys.push_back(-m / GRID_DIVISIONS)
-		m += 1
-		p_grid_pos_y += p_grid_interval_length
-
-	return {
-		"x":
-			{
-				"positions": pos_xs,
-				"flags": flag_xs,
-				"g_digits": g_digits_xs,
-			},
-		"y":
-			{
-				"positions": pos_ys,
-				"flags": flag_ys,
-				"g_digits": g_digits_ys,
-			},
-	}
-
-func plot_grid(data: Dictionary) -> void:
-	$GridSpreader.draw(data, size)
-
-
-
-func plot() -> void:
-	if $GridSpreader.visible || $ScaleEmitter.visible:
-		var data = calc_grid_data()
-		if $GridSpreader.visible:
-			$GridSpreader.draw(data, size)
-		if $ScaleEmitter.visible:
-			var magnitude = -floor(log(_graph_scale) / log(GRID_DIVISIONS))
-			$ScaleEmitter.draw(data, VALUE_SCALE * pow(GRID_DIVISIONS, magnitude))
-
-
-	if $GraphPlotter.visible:
-		var n_origin := Vector2(CENTER_NORMAL.x , 1.0 - CENTER_NORMAL.y)
-		var number_of_grid = self.size / MINIMUM_GRID_SIZE
-		var __v_size: Vector2 = number_of_grid * (VALUE_SCALE/ GRID_DIVISIONS)
-		var __v_position: Vector2 = -(__v_size) * n_origin
-		var value_rect := Rect2(__v_position / _graph_scale * self.scale,  __v_size / _graph_scale * self.scale) 
-		$GraphPlotter.draw(data, graph_resolution, self.get_rect(), value_rect)
-		
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Helper functions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func _is_child_node_ready() -> bool:
+	return has_node("Grid") && has_node("Graph") && has_node("Scale")
