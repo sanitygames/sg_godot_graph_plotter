@@ -3,11 +3,11 @@ extends Panel
 class_name SGGGraphPlotter
 
 @export_group("Coordinate")
-@export_range(1, 1000000) var zoom :float = 1.0: set = set_zoom
+@export_range(0.0001, 1000000) var zoom :float = 1.0: set = set_zoom
 @export var normalized_origin := Vector2(0.5, 0.5)
 @export var value_par_grid := Vector2.ONE
-@export var value_par_rect_size := Vector2.ONE
 @export_subgroup("AdvancedSettings")
+@export_range(1, 1000) var graph_resolution: int = 100
 @export var minimum_subgrid_size: int = 10
 @export var grid_divisions: int = 5
 
@@ -19,19 +19,29 @@ func _enter_tree():
 	self.clip_contents = true
 
 	var dict = {
-		"Grid": [
-			func(): return Node2D.new(),
-			"res://addons/sgg_graph_plotter/grid.gd",
-		]
+		"Grid": {
+			fn = func(): return Node2D.new(),
+			path = "res://addons/sgg_graph_plotter/grid.gd",
+		},
+		"Graph": {
+			fn = func(): return Line2D.new(),
+			path = "res://addons/sgg_graph_plotter/graph.gd",
+		},
+		"Scale": {
+			fn = func(): return Node2D.new(),
+			path = "res://addons/sgg_graph_plotter/scale.gd",
+		},
 	}
+
+
 
 	for key in dict:
 		if !has_node(key):
-			var _node = dict[key][0].call()
+			var _node = dict[key].fn.call()
 			add_child(_node)
 			_node.name = key
 			_node.position = Vector2.ZERO
-			_node.set_script(load(dict[key][1]))
+			_node.set_script(load(dict[key].path))
 			_node.set_owner(get_tree().edited_scene_root)
 
 
@@ -43,17 +53,31 @@ func _on_item_rect_changed():
 
 
 func plot():
-	var value_rect_size = value_par_rect_size * zoom
-	var value_rect_position = -(value_rect_size * normalized_origin)
-	var pixel_origin = self.size * normalized_origin
-
-	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, fposmod(log(zoom) /log(grid_divisions), 1.0))
-	var subgrid_count = ceil(size / subgrid_size)  
+	# variables(pixel coordinates):
+	#	pixel_origin -> 原点座標
+	#	_subgrid_size_magnification -> グリッドの拡大率
+	#	subgrid_size -> グリッドのサイズ
+	#	subgrid_count -> 全体のグリッド本数
+	#	subgrid_start_position -> 最初のグリッドの描画位置
+	#	subgrid_start_count -> 最初のグリッドの原点からの相対位置
+	var pixel_origin = self.size * normalized_origin 
+	var _subgrid_size_magnification = fposmod(log(zoom) / log(grid_divisions), 1.0) 
+	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, _subgrid_size_magnification) 
+	var subgrid_count = ceil(size / subgrid_size) 
 	var subgrid_start_position = pixel_origin.posmod(subgrid_size)
 	var subgrid_start_count = ceil(-pixel_origin / subgrid_size)
 	$Grid.test_plot(subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
 
+	var scale = pow(grid_divisions, ceil((log(zoom) + 0.01) / log(grid_divisions)))
+	var subgrid_count_float = size / subgrid_size 
+	var value_rect_size =  (value_par_grid * subgrid_count_float) / scale
+	var value_rect_position = -(value_rect_size * normalized_origin)
+	var value_rect = Rect2(value_rect_position, value_rect_size)
+	var func2plot = func(x): return cos(x)
+	$Graph.test_plot(func2plot, graph_resolution, value_rect, get_rect())
 
+
+	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid)
 
 func set_zoom(value: float) -> void:
 	zoom = value
