@@ -10,7 +10,7 @@ class_name SGGGraphPlotter
 # │ └────┐ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├──┘ │ Graph
 # ├───── │ │ │ │ │ │ │ │ │ │ │ │ │ │ │ ├────┘ Plotter
 # ├──────┘ │ └───┘ │ └───┘ │ └───┘ │ │ │      ----------------------------------
-# └────────┴───────┴───────┴───────┴─┴─┘	  V0.1
+# └────────┴───────┴───────┴───────┴─┴─┘	  Ver.0.1.4
 # ==============================================================================
 
 
@@ -35,15 +35,17 @@ class_name SGGGraphPlotter
 	set = set_grid_divisions,
 	get = get_grid_divisions
 
-var element2plot = func(x): return sin(x)
+var element2plot = func(x): return sin(x):
+	set = set_element2plot,
+	get = get_element2plot
 var zoom_pow = 1.0
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Actions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 func _enter_tree():
-	print("sgggp enter tree")
-	item_rect_changed.connect(_on_item_rect_changed)
+	if !item_rect_changed.is_connected(_on_item_rect_changed):
+		item_rect_changed.connect(_on_item_rect_changed)
 	self.clip_contents = true
 
 	var dict = {
@@ -70,6 +72,7 @@ func _enter_tree():
 			_node.set_script(load(dict[key].path))
 			_node.set_owner(get_tree().edited_scene_root)
 
+	# element2plot = func(x): return sin(x)
 	plot()
 
 func _on_item_rect_changed():
@@ -80,9 +83,9 @@ func _on_item_rect_changed():
 # Methods
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 func plot():
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	#----------------------------------------
 	# set variables 
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	#----------------------------------------
 	var _graph_scale = log(zoom) / log(grid_divisions)
 	var _graph_scale_float_part = fposmod(_graph_scale, 1.0)
 	var _graph_scale_integer_part = ceil(_graph_scale)
@@ -97,14 +100,13 @@ func plot():
 	var value_rect_size =  (value_par_grid * subgrid_count_float) / graph_scale_logalized
 	var value_rect_position = -(value_rect_size * normalized_origin)
 	var value_rect = Rect2(value_rect_position, value_rect_size)
-	var func2plot = func(x): return cos(x)
 
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	#----------------------------------------
 	# plot at child nodes
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	$Grid.test_plot(subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
-	$Graph.test_plot(func2plot, graph_resolution, value_rect, get_rect())
-	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized)
+	#----------------------------------------
+	$Grid.plot(get_rect(), subgrid_start_position, subgrid_start_count, subgrid_count, subgrid_size, grid_divisions)
+	$Graph.plot(element2plot, graph_resolution, value_rect, get_rect())
+	$Scale.test_plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_grid, graph_scale_logalized / grid_divisions)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,6 +160,14 @@ func set_grid_divisions(value: int) -> void:
 
 func get_grid_divisions() -> int:
 	return grid_divisions
+
+func set_element2plot(value) -> void:
+	element2plot = value
+	if Engine.is_editor_hint() && _is_child_node_ready():
+		plot()
+
+func get_element2plot():
+	return element2plot
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
