@@ -78,6 +78,7 @@ func _enter_tree():
 			_node.position = Vector2.ZERO
 			_node.set_script(load(dict[key].path))
 			_node.set_owner(get_tree().edited_scene_root)
+			_node.set_meta("_edit_lock_", true)
 
 	# element2plot = func(x): return sin(x)
 	plot()
@@ -85,7 +86,6 @@ func _enter_tree():
 func _on_item_rect_changed():
 	if Engine.is_editor_hint() && _is_child_node_ready():
 		plot()
-
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,20 +102,20 @@ func plot() -> void:
 	#----------------------------------------
 	# set variables 
 	#----------------------------------------
-	var _graph_scale = log(zoom) / log(grid_divisions)
-	var _graph_scale_float_part = fposmod(_graph_scale, 1.0)
-	var _graph_scale_integer_part = ceil(_graph_scale)
-	var graph_scale_logalized = pow(grid_divisions, _graph_scale_integer_part)
-	var pixel_origin = self.size * normalized_origin 
-	var subgrid_size = minimum_subgrid_size * lerp(1, grid_divisions, _graph_scale_float_part) 
-	var subgrid_count = ceil(size / subgrid_size) 
-	var subgrid_start_position = pixel_origin.posmod(subgrid_size)
-	var subgrid_start_count = ceil(-pixel_origin / subgrid_size)
+	var _graph_scale: float = log(zoom) / log(grid_divisions)
+	var _graph_scale_float_part: float = fposmod(_graph_scale, 1.0)
+	var _graph_scale_integer_part: int = ceil(_graph_scale)
+	var graph_scale_logalized: float = pow(grid_divisions, _graph_scale_integer_part)
+	var pixel_origin: Vector2 = self.size * normalized_origin 
+	var subgrid_size: float = minimum_subgrid_size * lerp(1, grid_divisions, _graph_scale_float_part) 
+	var subgrid_count: Vector2 = ceil(size / subgrid_size) 
+	var subgrid_start_position: Vector2 = pixel_origin.posmod(subgrid_size)
+	var subgrid_start_count: Vector2 = ceil(-pixel_origin / subgrid_size)
 
-	var subgrid_count_float = size / subgrid_size 
-	var value_rect_size =  (value_par_grid * subgrid_count_float) / graph_scale_logalized
-	var value_rect_position = -(value_rect_size * normalized_origin)
-	var value_rect = Rect2(value_rect_position, value_rect_size)
+	var subgrid_count_float: Vector2 = size / subgrid_size 
+	var value_rect_size: Vector2 =  (value_par_grid * subgrid_count_float) / graph_scale_logalized
+	var value_rect_position: Vector2 = -(value_rect_size * normalized_origin)
+	var value_rect:Rect2 = Rect2(value_rect_position, value_rect_size)
 
 	#----------------------------------------
 	# plot at child nodes

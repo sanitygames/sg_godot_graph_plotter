@@ -7,11 +7,18 @@ extends Node2D
 @export var outline_size: int = 1: set = set_outline_size
 @export var outline_color := Color.BLACK: set = set_outline_color
 
-var labels = []
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Private variables
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+var _labels = []
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Methods
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 func plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_position, subgrid_count, subgrid_size, value_par_rect, scale):
-	var __ = labels.map(func(l): l.queue_free())
-	labels.clear()
+	var __ = _labels.map(func(l): l.queue_free())
+	_labels.clear()
 
 	for nx in subgrid_count.x:
 		if int(subgrid_start_count.x + nx) % int(grid_divisions) == 0:
@@ -26,7 +33,7 @@ func plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_posit
 			_label.add_theme_constant_override("outline_size", outline_size)
 			_label.position.x = subgrid_start_position.x + subgrid_size * nx
 			_label.position.y = pixel_origin.y
-			labels.push_back(_label)
+			_labels.push_back(_label)
 
 	for ny in subgrid_count.y:
 		if subgrid_start_count.y + ny == 0:
@@ -43,7 +50,11 @@ func plot(pixel_origin, grid_divisions, subgrid_start_count, subgrid_start_posit
 			_label.add_theme_constant_override("outline_size", outline_size)
 			_label.position.x = pixel_origin.x
 			_label.position.y = subgrid_start_position.y + subgrid_size * ny
-			labels.push_back(_label)
+			_labels.push_back(_label)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# setter getter
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 func set_font(value: Font) -> void:
 	font = value

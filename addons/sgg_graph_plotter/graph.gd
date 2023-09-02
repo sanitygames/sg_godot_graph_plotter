@@ -2,6 +2,10 @@
 extends Line2D
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Methods
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 func plot_callable(callable_to_plot: Callable, resolution: int, value_rect: Rect2, pixel_rect: Rect2) -> void:
 	var _points = []
 	if callable_to_plot.is_null():

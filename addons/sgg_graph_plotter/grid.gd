@@ -24,15 +24,30 @@ extends Node2D
 	get = get_axis_y_color
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Private variables
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-var _grid_start_position
-var _grid_start_count 
-var _subgrid_count
-var _subgrid_size
-var _grid_divisions
-var _pixel_rect
+var _grid_start_position: Vector2
+var _grid_start_count: Vector2
+var _subgrid_count: Vector2
+var _subgrid_size: float
+var _grid_divisions: float
+var _pixel_rect: Rect2
 
-func plot(pixel_rect, grid_start_position, grid_start_count, subgrid_count, subgrid_size, grid_divisions):
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Methods
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+func plot(
+	pixel_rect: Rect2, 
+	grid_start_position: Vector2, 
+	grid_start_count: Vector2, 
+	subgrid_count: Vector2, 
+	subgrid_size: float, 
+	grid_divisions: float):
+
 	_pixel_rect = pixel_rect
 	_grid_start_position = grid_start_position
 	_grid_start_count = grid_start_count
@@ -41,6 +56,10 @@ func plot(pixel_rect, grid_start_position, grid_start_count, subgrid_count, subg
 	_grid_divisions = grid_divisions
 
 	queue_redraw()
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# draw overload
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 func _draw():
 	# Draw vartical lines
@@ -72,6 +91,9 @@ func _draw():
 		draw_line(s, e, c, w)
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# setter getter
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 func set_grid_width(value: float) -> void:
 	grid_width = value
